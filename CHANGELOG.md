@@ -51,6 +51,15 @@ environment.resolvedModules.set('vendor', 'vendor')
 - Enable sourcemaps in `style` and `css` loader
 
 
+### Added
+
+- Allow skipping webpacker compile using an env variable
+
+```bash
+SKIP_WEBPACKER_COMPILE=yes|true|enabled
+```
+
+
 ## [3.0.2] - 2017-10-04
 
 ### Added

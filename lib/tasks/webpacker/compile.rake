@@ -23,7 +23,7 @@ namespace :webpacker do
 end
 
 # Compile packs after we've compiled all other assets during precompilation
-if Rake::Task.task_defined?("assets:precompile")
+if Rake::Task.task_defined?("assets:precompile") && !ENV["SKIP_WEBPACKER_COMPILE"]
   Rake::Task["assets:precompile"].enhance do
     unless Rake::Task.task_defined?("yarn:install")
       # For Rails < 5.1
