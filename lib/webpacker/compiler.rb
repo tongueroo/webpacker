@@ -10,7 +10,7 @@ class Webpacker::Compiler
   # Webpacker::Compiler.env['FRONTEND_API_KEY'] = 'your_secret_key'
   cattr_accessor(:env) { {} }
 
-  delegate :config, :logger, to: :@webpacker
+  delegate :config, :logger, to: :webpacker
 
   def initialize(webpacker)
     @webpacker = webpacker
@@ -18,8 +18,9 @@ class Webpacker::Compiler
 
   def compile
     if stale?
-      record_compilation_digest
-      run_webpack
+      run_webpack.tap do |success|
+        record_compilation_digest if success
+      end
     else
       true
     end
@@ -36,13 +37,17 @@ class Webpacker::Compiler
   end
 
   private
+    attr_reader :webpacker
+
     def last_compilation_digest
       compilation_digest_path.read if compilation_digest_path.exist? && config.public_manifest_path.exist?
+    rescue Errno::ENOENT, Errno::ENOTDIR
     end
 
     def watched_files_digest
       files = Dir[*default_watched_paths, *watched_paths].reject { |f| File.directory?(f) }
-      Digest::SHA1.hexdigest(files.map { |f| "#{File.basename(f)}/#{File.mtime(f).utc.to_i}" }.join("/"))
+      file_ids = files.sort.map { |f| "#{File.basename(f)}/#{Digest::SHA1.file(f).hexdigest}" }
+      Digest::SHA1.hexdigest(file_ids.join("/"))
     end
 
     def record_compilation_digest
@@ -53,10 +58,15 @@ class Webpacker::Compiler
     def run_webpack
       logger.info "Compiling…"
 
-      sterr, stdout, status = Open3.capture3(webpack_env, "bundle exec webpack")
+      stdout, sterr , status = Open3.capture3(
+        webpack_env,
+        "#{RbConfig.ruby} ./bin/webpack",
+        chdir: File.expand_path(config.root_path)
+      )
 
-      if status.success?
+      if sterr == "" && status.success?
         logger.info "Compiled all packs in #{config.public_output_path}"
+        logger.info stdout if config.webpack_compile_output?
       else
         logger.error "Compilation failed:\n#{sterr}\n#{stdout}"
       end
@@ -67,17 +77,20 @@ class Webpacker::Compiler
     def default_watched_paths
       [
         *config.resolved_paths_globbed,
-        "#{config.source_path.relative_path_from(Rails.root)}/**/*",
+        "#{config.source_path.relative_path_from(config.root_path)}/**/*",
         "yarn.lock", "package.json",
         "config/webpack/**/*"
       ].freeze
     end
 
     def compilation_digest_path
-      config.cache_path.join(".last-compilation-digest-#{Webpacker.env}")
+      config.cache_path.join("last-compilation-digest-#{webpacker.env}")
     end
 
     def webpack_env
-      env.merge("NODE_ENV" => @webpacker.env, "WEBPACKER_ASSET_HOST" => ActionController::Base.helpers.compute_asset_host)
+      return env unless defined?(ActionController::Base)
+
+      env.merge("WEBPACKER_ASSET_HOST"        => ActionController::Base.helpers.compute_asset_host,
+                "WEBPACKER_RELATIVE_URL_ROOT" => ActionController::Base.relative_url_root)
     end
 end

@@ -3,44 +3,51 @@
 
 ## Typescript with React
 
-1. Setup react using Webpacker [react installer](#react). Then add required depedencies
-for using typescript with React:
+1. Setup react using Webpacker [react installer](../README.md#react). Then run the typescript installer
 
 ```bash
-yarn add ts-loader typescript @types/react @types/react-dom
+bundle exec rails webpacker:install:typescript
+yarn add @types/react @types/react-dom
 ```
 
-2. Add a `tsconfig.json` to project root:
+2. Rename the generated `hello_react.js` to `hello_react.tsx`. Make the file valid typescript and
+now you can use typescript, JSX with React.
 
-``` json
-{
-  "compilerOptions": {
-    "declaration": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "lib": ["es6", "dom"],
-    "module": "es6",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "jsx": "react",
-    "target": "es5"
-  },
-  "exclude": [
-    "**/*.spec.ts",
-    "node_modules",
-    "vendor",
-    "public"
-  ],
-  "compileOnSave": false
+## Typescript with Vue components
+
+1. Setup vue using Webpacker [vue installer](../README.md#vue). Then run the typescript installer
+
+```bash
+bundle exec rails webpacker:install:typescript
+```
+
+2. Rename generated `hello_vue.js` to `hello_vue.ts`.
+3. Change generated `config/webpack/loaders/typescript.js` from
+
+```js
+module.exports = {
+  test: /\.(ts|tsx)?(\.erb)?$/,
+  use: [{
+    loader: 'ts-loader'
+  }]
 }
 ```
 
-3. Finally add `.tsx` to the list of extensions in `config/webpacker.yml`
-and rename your generated `hello_react.js` using react installer
-to `hello_react.tsx` and make it valid typescript and now you can use
-typescript, JSX with React.
+to
 
+```js
+module.exports = {
+  test: /\.(ts|tsx)?(\.erb)?$/,
+  use: [{
+    loader: 'ts-loader',
+    options: {
+      appendTsSuffixTo: [/\.vue$/]
+    }
+  }]
+}
+```
 
+and now you can use `<script lang="ts">` in your `.vue` component files.
 
 ## HTML templates with Typescript and Angular
 
@@ -56,7 +63,7 @@ yarn add html-loader
 2. Add html-loader to `config/webpack/environment.js`
 
 ```js
-environment.loaders.set('html', {
+environment.loaders.append('html', {
   test: /\.html$/,
   use: [{
     loader: 'html-loader',

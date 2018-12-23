@@ -11,7 +11,7 @@ services:
     build: .
     env_file:
       - '.env.docker'
-    command: bundle exec webpack-dev-server
+    command: ./bin/webpack-dev-server
     volumes:
       - .:/webpacker-example-app
     ports:
@@ -29,7 +29,7 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
 RUN apt-get install -y nodejs
-RUN apt-get update && apt-get install yarn
+RUN apt-get update && apt-get install -y yarn
 
 # Rest of the commands....
 ```
@@ -39,7 +39,7 @@ and create an env file to load environment variables from:
 ```env
 NODE_ENV=development
 RAILS_ENV=development
-WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+WEBPACKER_DEV_SERVER_HOST=0.0.0.0
 ```
 
 Lastly, rebuild your container:
