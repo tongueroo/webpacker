@@ -1,8 +1,9 @@
 const webpack = require('webpack')
-const Environment = require('../environment')
-const { dev_server: devServer, outputPath: contentBase, publicPath } = require('../config')
+const Base = require('./base')
+const devServer = require('../dev_server')
+const { outputPath: contentBase, publicPath } = require('../config')
 
-module.exports = class extends Environment {
+module.exports = class extends Base {
   constructor() {
     super()
 
@@ -13,6 +14,8 @@ module.exports = class extends Environment {
     }
 
     this.config.merge({
+      mode: 'development',
+      cache: true,
       devtool: 'cheap-module-source-map',
       output: {
         pathinfo: true
@@ -37,7 +40,10 @@ module.exports = class extends Environment {
         headers: devServer.headers,
         overlay: devServer.overlay,
         stats: {
-          errorDetails: true
+          entrypoints: false,
+          errorDetails: false,
+          modules: false,
+          moduleTrace: false
         },
         watchOptions: devServer.watch_options
       }

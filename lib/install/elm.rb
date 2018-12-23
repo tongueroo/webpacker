@@ -9,7 +9,7 @@ insert_into_file Jets.root.join("config/webpack/environment.js").to_s,
   after: "require('@rails/webpacker')\n"
 
 insert_into_file Jets.root.join("config/webpack/environment.js").to_s,
-  "environment.loaders.append('elm', elm)\n",
+  "environment.loaders.prepend('elm', elm)\n",
   before: "module.exports"
 
 say "Copying Elm example entry file to #{Webpacker.config.source_entry_path}"
@@ -22,14 +22,15 @@ copy_file "#{__dir__}/examples/elm/Main.elm",
 
 say "Installing all Elm dependencies"
 run "yarn add elm elm-webpack-loader"
-run "yarn add --dev elm-hot-loader"
-run "yarn run elm package install -- --yes"
+run "yarn add --dev elm-hot-webpack-loader"
+run "yarn run elm init"
+run "yarn run elm make"
 
-say "Updating webpack paths to include Elm file extension"
-insert_into_file Webpacker.config.config_path, "    - .elm\n", after: /extensions:\n/
+say "Updating webpack paths to include .elm file extension"
+insert_into_file Webpacker.config.config_path, "- .elm\n".indent(4), after: /\s+extensions:\n/
 
 say "Updating Elm source location"
-gsub_file "elm-package.json", /\"\.\"\n/,
+gsub_file "elm.json", /\"\src\"\n/,
   %("#{Webpacker.config.source_path.relative_path_from(Jets.root)}"\n)
 
 say "Updating .gitignore to include elm-stuff folder"

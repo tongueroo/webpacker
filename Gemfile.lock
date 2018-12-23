@@ -1,7 +1,20 @@
+GIT
+  remote: https://github.com/rubocop-hq/rubocop.git
+  revision: c40e68381b5d11758e093ac9c636cdca585275dd
+  specs:
+    rubocop (0.61.1)
+      jaro_winkler (~> 1.5.1)
+      parallel (~> 1.10)
+      parser (>= 2.5, != 2.5.1.1)
+      powerpack (~> 0.1)
+      rainbow (>= 2.2.2, < 4.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (~> 1.4.0)
+
 PATH
   remote: .
   specs:
-    webpacker (3.2.0)
+    webpacker (4.0.0.rc.2)
       activesupport (>= 4.2)
       rack-proxy (>= 0.6.1)
       railties (>= 4.2)
@@ -112,14 +125,6 @@ GEM
       thor (>= 0.19.0, < 2.0)
     rainbow (3.0.0)
     rake (12.3.2)
-    rubocop (0.61.1)
-      jaro_winkler (~> 1.5.1)
-      parallel (~> 1.10)
-      parser (>= 2.5, != 2.5.1.1)
-      powerpack (~> 0.1)
-      rainbow (>= 2.2.2, < 4.0)
-      ruby-progressbar (~> 1.7)
-      unicode-display_width (~> 1.4.0)
     ruby-progressbar (1.10.0)
     sprockets (3.7.2)
       concurrent-ruby (~> 1.0)
@@ -147,7 +152,7 @@ DEPENDENCIES
   rack-proxy
   rails
   rake (>= 11.1)
-  rubocop (>= 0.49)
+  rubocop!
   webpacker!
 
 BUNDLED WITH

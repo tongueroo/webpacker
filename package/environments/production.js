@@ -1,37 +1,67 @@
-const webpack = require('webpack')
+const TerserPlugin = require('terser-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
-const Environment = require('../environment')
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const safePostCssParser = require('postcss-safe-parser')
+const Base = require('./base')
 
-module.exports = class extends Environment {
+module.exports = class extends Base {
   constructor() {
     super()
 
-    this.plugins.append('ModuleConcatenation', new webpack.optimize.ModuleConcatenationPlugin())
+    this.plugins.append(
+      'Compression',
+      new CompressionPlugin({
+        filename: '[path].gz[query]',
+        algorithm: 'gzip',
+        cache: true,
+        test: /\.(js|css|html|json|ico|svg|eot|otf|ttf)$/
+      })
+    )
 
-    this.plugins.append('UglifyJs', new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      mangle: {
-        safari10: true
-      },
-      compress: {
-        warnings: false,
-        comparisons: false
-      },
-      output: {
-        comments: false,
-        ascii_only: true
-      }
-    }))
-
-    this.plugins.append('Compression', new CompressionPlugin({
-      asset: '[path].gz[query]',
-      algorithm: 'gzip',
-      test: /\.(js|css|html|json|ico|svg|eot|otf|ttf)$/
-    }))
+    this.plugins.append(
+      'OptimizeCSSAssets',
+      new OptimizeCSSAssetsPlugin({
+        parser: safePostCssParser,
+        map: {
+          inline: false,
+          annotation: true
+        }
+      })
+    )
 
     this.config.merge({
       devtool: 'nosources-source-map',
-      stats: 'normal'
+      stats: 'normal',
+      bail: true,
+      optimization: {
+        minimizer: [
+          new TerserPlugin({
+            parallel: true,
+            cache: true,
+            sourceMap: true,
+            terserOptions: {
+              parse: {
+                // Let terser parse ecma 8 code but always output
+                // ES5 compliant code for older browsers
+                ecma: 8
+              },
+              compress: {
+                ecma: 5,
+                warnings: false,
+                comparisons: false
+              },
+              mangle: {
+                safari10: true
+              },
+              output: {
+                ecma: 5,
+                comments: false,
+                ascii_only: true
+              }
+            }
+          })
+        ]
+      }
     })
   }
 }

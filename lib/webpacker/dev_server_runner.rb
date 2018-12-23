@@ -1,6 +1,7 @@
 require "shellwords"
-require "yaml"
 require "socket"
+require "webpacker/configuration"
+require "webpacker/dev_server"
 require "webpacker/runner"
 
 module Webpacker
@@ -13,15 +14,22 @@ module Webpacker
 
     private
       def load_config
-        @config_file = File.join(@app_path, "config/webpacker.yml")
-        dev_server = YAML.load_file(@config_file)[ENV["JETS_ENV"]]["dev_server"]
+        app_root = Pathname.new(@app_path)
 
-        @hostname          = dev_server["host"]
-        @port              = dev_server["port"]
-        @pretty            = dev_server.fetch("pretty", true)
+        config = Configuration.new(
+          root_path: app_root,
+          config_path: app_root.join("config/webpacker.yml"),
+          env: ENV["RAILS_ENV"]
+        )
+
+        dev_server = DevServer.new(config)
+
+        @hostname          = dev_server.host
+        @port              = dev_server.port
+        @pretty            = dev_server.pretty?
 
       rescue Errno::ENOENT, NoMethodError
-        $stdout.puts "webpack dev_server configuration not found in #{@config_file}."
+        $stdout.puts "webpack dev_server configuration not found in #{config.config_path}[#{Jets.env}]."
         $stdout.puts "Please run jets webpacker:install to install Webpacker"
         exit!
       end
@@ -36,16 +44,23 @@ module Webpacker
       end
 
       def execute_cmd
-        env = { "NODE_PATH" => @node_modules_path.shellescape }
-        cmd = [
-          "#{@node_modules_path}/.bin/webpack-dev-server",
-          "--config", @webpack_config
-        ]
+        env = Webpacker::Compiler.env
+
+        cmd = if node_modules_bin_exist?
+          ["#{@node_modules_bin_path}/webpack-dev-server"]
+        else
+          ["yarn", "webpack-dev-server"]
+        end
+        cmd += ["--config", @webpack_config]
         cmd += ["--progress", "--color"] if @pretty
 
         Dir.chdir(@app_path) do
-          exec env, *cmd
+          Kernel.exec env, *cmd
         end
+      end
+
+      def node_modules_bin_exist?
+        File.exist?("#{@node_modules_bin_path}/webpack-dev-server")
       end
   end
 end
