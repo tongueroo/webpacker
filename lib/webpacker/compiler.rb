@@ -58,6 +58,7 @@ class Webpacker::Compiler
     def run_webpack
       logger.info "Compiling…"
 
+      webpack_env ||= {}
       stdout, sterr , status = Open3.capture3(
         webpack_env,
         "#{RbConfig.ruby} ./bin/webpack",
@@ -102,6 +103,6 @@ class Webpacker::Compiler
 
       env.merge("WEBPACKER_ASSET_HOST"        => asset_host,
                 "WEBPACKER_RELATIVE_URL_ROOT" => relative_url_root)
-      return env unless defined?(ActionController::Base)
+      return nil unless defined?(ActionController::Base)
     end
 end
