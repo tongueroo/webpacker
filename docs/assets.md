@@ -56,12 +56,12 @@ You can also use [babel-plugin-module-resolver](https://github.com/tleunen/babel
 yarn add babel-plugin-module-resolver
 ```
 
-Specify the plugin in your `babel.config.js` with the custom root or alias. Here's an example:
+Specify the plugin in your `.babelrc` with the custom root or alias. Here's an example:
 
-```js
+```json
 {
-  plugins: [
-    [require("module-resolver").default, {
+  "plugins": [
+    ["module-resolver", {
       "root": ["./app"],
       "alias": {
         "assets": "./assets"
@@ -74,7 +74,7 @@ Specify the plugin in your `babel.config.js` with the custom root or alias. Here
 And then within your javascript app code:
 
 ```js
-// Note: we don't have to do any ../../ jazz
+// Note: we don't have do any ../../ jazz
 
 import FooImage from 'assets/images/foo-image.png'
 import 'assets/stylesheets/bar'
@@ -102,8 +102,5 @@ app/javascript:
 <%# => "/packs/hello_react.css" %>
 
 <img src="<%= asset_pack_path 'images/calendar.png' %>" />
-<% # => <img src="/packs/images/calendar.png" /> %>
-
-<%= image_pack_tag 'images/calendar.png' %>
 <% # => <img src="/packs/images/calendar.png" /> %>
 ```

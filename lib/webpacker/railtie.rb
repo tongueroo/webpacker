@@ -6,12 +6,7 @@ require "webpacker/dev_server_proxy"
 class Webpacker::Engine < ::Rails::Engine
   # Allows Webpacker config values to be set via Rails env config files
   config.webpacker = ActiveSupport::OrderedOptions.new
-
-  initializer "webpacker.set_configs" do |app|
-    if app.config.webpacker.key?(:check_yarn_integrity)
-      Webpacker.config.check_yarn_integrity = app.config.webpacker.check_yarn_integrity
-    end
-  end
+  config.webpacker.check_yarn_integrity = false
 
   # ================================
   # Check Yarn Integrity Initializer
@@ -27,23 +22,23 @@ class Webpacker::Engine < ::Rails::Engine
   #
   #    to turn on:
   #     - edit config/environments/production.rb
-  #     - add `config.webpacker.check_yarn_integrity = true`
+  #     - add `config.webpacker.check_yarn_integrity = false`
   initializer "webpacker.yarn_check" do |app|
-    if File.exist?("yarn.lock") && Webpacker.config.config_path.exist? && Webpacker.config.check_yarn_integrity?
-      output = `yarn check --integrity && yarn check --verify-tree 2>&1`
+    if File.exist?("yarn.lock") && app.config.webpacker.check_yarn_integrity
+      output = `yarn check --integrity 2>&1`
 
       unless $?.success?
-        $stderr.puts "\n\n"
-        $stderr.puts "========================================"
-        $stderr.puts "  Your Yarn packages are out of date!"
-        $stderr.puts "  Please run `yarn install --check-files` to update."
-        $stderr.puts "========================================"
-        $stderr.puts "\n\n"
-        $stderr.puts "To disable this check, please change `check_yarn_integrity`"
-        $stderr.puts "to `false` in your webpacker config file (config/webpacker.yml)."
-        $stderr.puts "\n\n"
-        $stderr.puts output
-        $stderr.puts "\n\n"
+        warn "\n\n"
+        warn "========================================"
+        warn "  Your Yarn packages are out of date!"
+        warn "  Please run `yarn install` to update."
+        warn "========================================"
+        warn "\n\n"
+        warn "To disable this check, please add `config.webpacker.check_yarn_integrity = false`"
+        warn "to your Rails development config file (config/environments/development.rb)."
+        warn "\n\n"
+        warn output
+        warn "\n\n"
 
         exit(1)
       end
@@ -51,8 +46,7 @@ class Webpacker::Engine < ::Rails::Engine
   end
 
   initializer "webpacker.proxy" do |app|
-    insert_middleware = Webpacker.config.dev_server.present? rescue nil
-    if insert_middleware
+    if Rails.env.development?
       app.middleware.insert_before 0,
         Rails::VERSION::MAJOR >= 5 ?
           Webpacker::DevServerProxy : "Webpacker::DevServerProxy", ssl_verify_none: true
@@ -82,11 +76,7 @@ class Webpacker::Engine < ::Rails::Engine
   initializer "webpacker.bootstrap" do
     if defined?(Rails::Server) || defined?(Rails::Console)
       Webpacker.bootstrap
-      if defined?(Spring)
-        require "spring/watcher"
-        Spring.after_fork { Webpacker.bootstrap }
-        Spring.watch(Webpacker.config.config_path)
-      end
+      Spring.after_fork { Webpacker.bootstrap } if defined?(Spring)
     end
   end
 end

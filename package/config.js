@@ -2,40 +2,33 @@ const { resolve } = require('path')
 const { safeLoad } = require('js-yaml')
 const { readFileSync } = require('fs')
 const deepMerge = require('./utils/deep_merge')
-const { isArray, ensureTrailingSlash } = require('./utils/helpers')
-const { railsEnv } = require('./env')
 
-const defaultConfigPath = require.resolve('../lib/install/config/webpacker.yml')
-const configPath = resolve('config', 'webpacker.yml')
+const defaultFilePath = require.resolve('../lib/install/config/webpacker.yml')
+const filePath = resolve('config', 'webpacker.yml')
 
-const getDefaultConfig = () => {
-  const defaultConfig = safeLoad(readFileSync(defaultConfigPath), 'utf8')
-  return defaultConfig[railsEnv] || defaultConfig.production
+const environment = process.env.NODE_ENV || 'development'
+const defaultConfig = safeLoad(readFileSync(defaultFilePath), 'utf8')[environment]
+const appConfig = safeLoad(readFileSync(filePath), 'utf8')[environment]
+const config = deepMerge(defaultConfig, appConfig)
+
+const isBoolean = str => /^true/.test(str) || /^false/.test(str)
+
+const fetch = key =>
+  (isBoolean(process.env[key]) ? JSON.parse(process.env[key]) : process.env[key])
+
+const devServer = (key) => {
+  const envValue = fetch(`WEBPACKER_DEV_SERVER_${key.toUpperCase().replace(/_/g, '')}`)
+  if (typeof envValue === 'undefined' || envValue === null) return config.dev_server[key]
+  return envValue
 }
 
-const defaults = getDefaultConfig()
-const app = safeLoad(readFileSync(configPath), 'utf8')[railsEnv]
-
-if (isArray(app.extensions) && app.extensions.length) delete defaults.extensions
-
-const config = deepMerge(defaults, app)
-config.outputPath = resolve(config.public_root_path, config.public_output_path)
-
-// Ensure that the publicPath includes our asset host so dynamic imports
-// (code-splitting chunks and static assets) load from the CDN instead of a relative path.
-const getPublicPath = () => {
-  const rootUrl = process.env.WEBPACKER_ASSET_HOST || '/'
-  let packPath = `${config.public_output_path}/`
-  // Add relative root prefix to pack path.
-  if (process.env.RAILS_RELATIVE_URL_ROOT) {
-    let relativeRoot = process.env.RAILS_RELATIVE_URL_ROOT
-    relativeRoot = relativeRoot.startsWith('/') ? relativeRoot.substr(1) : relativeRoot
-    packPath = `${ensureTrailingSlash(relativeRoot)}${packPath}`
-  }
-
-  return ensureTrailingSlash(rootUrl) + packPath
+if (config.dev_server) {
+  Object.keys(config.dev_server).forEach((key) => {
+    config.dev_server[key] = devServer(key)
+  })
 }
 
-config.publicPath = getPublicPath()
+config.outputPath = resolve('public', config.public_output_path)
+config.publicPath = `/${config.public_output_path}/`.replace(/([^:]\/)\/+/g, '$1')
 
 module.exports = config

@@ -8,15 +8,13 @@ class Webpacker::Instance
   end
 
   def env
-    @env ||= Webpacker::Env.inquire self
+    (ENV["NODE_ENV"].presence_in(available_environments) ||
+      Jets.env.presence_in(available_environments) ||
+        "production".freeze).inquiry
   end
 
   def config
-    @config ||= Webpacker::Configuration.new(
-      root_path: root_path,
-      config_path: config_path,
-      env: env
-    )
+    @config ||= Webpacker::Configuration.new self
   end
 
   def compiler
@@ -24,7 +22,7 @@ class Webpacker::Instance
   end
 
   def dev_server
-    @dev_server ||= Webpacker::DevServer.new config
+    @dev_server ||= Webpacker::DevServer.new self
   end
 
   def manifest
@@ -34,4 +32,13 @@ class Webpacker::Instance
   def commands
     @commands ||= Webpacker::Commands.new self
   end
+
+  private
+    def available_environments
+      if config_path.exist?
+        YAML.load(config_path.read).keys
+      else
+        [].freeze
+      end
+    end
 end

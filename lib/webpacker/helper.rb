@@ -1,26 +1,13 @@
 module Webpacker::Helper
-  # Returns current Webpacker instance.
-  # Could be overriden to use multiple Webpacker
-  # configurations within the same app (e.g. with engines)
-  def current_webpacker_instance
-    Webpacker.instance
-  end
-
   # Computes the relative path for a given Webpacker asset.
   # Return relative path using manifest.json and passes it to asset_path helper
   # This will use asset_path internally, so most of their behaviors will be the same.
   #
   # Example:
   #
-  #   # When extract_css is false in webpacker.yml and the file is a css:
-  #   <%= asset_pack_path 'calendar.css' %>  # => nil
-  #
-  #   # When extract_css is true in webpacker.yml or the file is not a css:
   #   <%= asset_pack_path 'calendar.css' %> # => "/packs/calendar-1016838bab065ae1e122.css"
   def asset_pack_path(name, **options)
-    if current_webpacker_instance.config.extract_css? || !stylesheet?(name)
-      asset_path(current_webpacker_instance.manifest.lookup!(name), **options)
-    end
+    asset_path(Webpacker.manifest.lookup!(name), **options)
   end
 
   # Computes the absolute path for a given Webpacker asset.
@@ -29,25 +16,9 @@ module Webpacker::Helper
   #
   # Example:
   #
-  #   # When extract_css is false in webpacker.yml and the file is a css:
-  #   <%= asset_pack_url 'calendar.css' %> # => nil
-  #
-  #   # When extract_css is true in webpacker.yml or the file is not a css:
   #   <%= asset_pack_url 'calendar.css' %> # => "http://example.com/packs/calendar-1016838bab065ae1e122.css"
   def asset_pack_url(name, **options)
-    if current_webpacker_instance.config.extract_css? || !stylesheet?(name)
-      asset_url(current_webpacker_instance.manifest.lookup!(name), **options)
-    end
-  end
-
-  # Creates a image tag that references the named pack file.
-  #
-  # Example:
-  #
-  #  <%= image_pack_tag 'application.png', size: '16x10', alt: 'Edit Entry' %>
-  #  <img alt='Edit Entry' src='/packs/application-k344a6d59eef8632c9d1.png' width='16' height='10' />
-  def image_pack_tag(name, **options)
-    image_tag(asset_path(current_webpacker_instance.manifest.lookup!(name)), **options)
+    asset_url(Webpacker.manifest.lookup!(name), **options)
   end
 
   # Creates a script tag that references the named pack file, as compiled by webpack per the entries list
@@ -71,25 +42,25 @@ module Webpacker::Helper
   #
   # Examples:
   #
-  #   # When extract_css is false in webpacker.yml:
+  #   # In development mode with hot module replacement:
   #   <%= stylesheet_pack_tag 'calendar', 'data-turbolinks-track': 'reload' %> # =>
   #   nil
   #
-  #   # When extract_css is true in webpacker.yml:
+  #   # In production mode:
   #   <%= stylesheet_pack_tag 'calendar', 'data-turbolinks-track': 'reload' %> # =>
   #   <link rel="stylesheet" media="screen" href="/packs/calendar-1016838bab065ae1e122.css" data-turbolinks-track="reload" />
   def stylesheet_pack_tag(*names, **options)
-    if current_webpacker_instance.config.extract_css?
+    unless Webpacker.dev_server.running? && Webpacker.dev_server.hot_module_replacing?
       stylesheet_link_tag(*sources_from_pack_manifest(names, type: :stylesheet), **options)
     end
   end
 
   private
-    def stylesheet?(name)
-      File.extname(name) == ".css"
+    def sources_from_pack_manifest(names, type:)
+      names.map { |name| Webpacker.manifest.lookup!(pack_name_with_extension(name, type: type)) }
     end
 
-    def sources_from_pack_manifest(names, type:)
-      names.map { |name| current_webpacker_instance.manifest.lookup!(name, type: type) }.flatten
+    def pack_name_with_extension(name, type:)
+      "#{name}#{compute_asset_extname(name, type: type)}"
     end
 end

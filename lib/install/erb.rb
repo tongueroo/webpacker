@@ -12,9 +12,6 @@ insert_into_file Jets.root.join("config/webpack/environment.js").to_s,
   "environment.loaders.append('erb', erb)\n",
   before: "module.exports"
 
-say "Updating webpack paths to include .erb file extension"
-insert_into_file Webpacker.config.config_path, "- .erb\n".indent(4), after: /\s+extensions:\n/
-
 say "Copying the example entry file to #{Webpacker.config.source_entry_path}"
 copy_file "#{__dir__}/examples/erb/hello_erb.js.erb",
   "#{Webpacker.config.source_entry_path}/hello_erb.js.erb"

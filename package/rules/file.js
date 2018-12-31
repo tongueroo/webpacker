@@ -1,15 +1,13 @@
 const { join } = require('path')
-const { source_path: sourcePath, static_assets_extensions: fileExtensions } = require('../config')
+const { source_path } = require('../config')
 
 module.exports = {
-  test: new RegExp(`(${fileExtensions.join('|')})$`, 'i'),
-  use: [
-    {
-      loader: 'file-loader',
-      options: {
-        name: '[path][name]-[hash].[ext]',
-        context: join(sourcePath)
-      }
+  exclude: /\.(js|jsx|coffee|ts|tsx|vue|elm|scss|sass|css|html|json)?(\.erb)?$/,
+  use: [{
+    loader: 'file-loader',
+    options: {
+      name: '[path][name]-[hash].[ext]',
+      context: join(source_path)
     }
-  ]
+  }]
 }

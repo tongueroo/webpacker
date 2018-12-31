@@ -9,9 +9,11 @@ ensure
 end
 
 def enhance_assets_precompile
-  # For Rails < 5.1
-  deps = Rake::Task.task_defined?("yarn:install") ? [] : ["webpacker:yarn_install"]
-  Rake::Task["assets:precompile"].enhance(deps) do
+  Rake::Task["assets:precompile"].enhance do
+    unless Rake::Task.task_defined?("yarn:install")
+      # For Rails < 5.1
+      Rake::Task["webpacker:yarn_install"].invoke
+    end
     Rake::Task["webpacker:compile"].invoke
   end
 end
@@ -19,14 +21,12 @@ end
 namespace :webpacker do
   desc "Compile JavaScript packs using webpack for production with digests"
   task compile: ["webpacker:verify_install", :environment] do
-    Webpacker.with_node_env("production") do
-      ensure_log_goes_to_stdout do
-        if Webpacker.compile
-          # Successful compilation!
-        else
-          # Failed compilation
-          exit!
-        end
+    ensure_log_goes_to_stdout do
+      if Webpacker.compile
+        # Successful compilation!
+      else
+        # Failed compilation
+        exit!
       end
     end
   end

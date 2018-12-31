@@ -1,14 +1,12 @@
-require "yaml"
-require "active_support/core_ext/hash/keys"
-require "active_support/core_ext/hash/indifferent_access"
-
 class Webpacker::Configuration
-  attr_reader :root_path, :config_path, :env
+  delegate :root_path, :config_path, :env, to: :@webpacker
 
-  def initialize(root_path:, config_path:, env:)
-    @root_path = root_path
-    @config_path = config_path
-    @env = env
+  def initialize(webpacker)
+    @webpacker = webpacker
+  end
+
+  def refresh
+    @data = load
   end
 
   def dev_server
@@ -36,7 +34,7 @@ class Webpacker::Configuration
   end
 
   def public_path
-    root_path.join(fetch(:public_root_path))
+    root_path.join("public")
   end
 
   def public_output_path
@@ -57,22 +55,6 @@ class Webpacker::Configuration
 
   def extensions
     fetch(:extensions)
-  end
-
-  def check_yarn_integrity=(value)
-    data[:check_yarn_integrity] = value
-  end
-
-  def check_yarn_integrity?
-    fetch(:check_yarn_integrity)
-  end
-
-  def webpack_compile_output?
-    fetch(:webpack_compile_output)
-  end
-
-  def extract_css?
-    fetch(:extract_css)
   end
 
   private

@@ -86,7 +86,7 @@ chmod +x $HOME/your_rails_app/node_modules/.bin/elm-make
 ```
 
 ## Rake assets:precompile fails. ExecJS::RuntimeError
-This error occurs because you are trying to minify by terser a pack that's already been minified by Webpacker. To avoid this conflict and prevent appearing of ExecJS::RuntimeError error, you will need to disable uglifier from Rails config:
+This error occurs because you are trying to uglify a pack that's already been minified by Webpacker. To avoid this conflict and prevent appearing of ExecJS::RuntimeError error, you will need to disable uglifier from Rails config:
 
 ```ruby
 // production.rb
@@ -110,7 +110,7 @@ const webpack = require('webpack')
 const { resolve } = require('path')
 const { environment, config } = require('@rails/webpacker')
 
-environment.plugins.append('ContextReplacement',
+environment.plugins.set('ContextReplacement',
   new webpack.ContextReplacementPlugin(
     /angular(\\|\/)core(\\|\/)(@angular|esm5)/,
     resolve(config.source_path)

@@ -6,28 +6,24 @@ require "byebug"
 
 require_relative "test_app/config/environment"
 
-Rails.env = "production"
+ENV["NODE_ENV"] ||= "production"
 
-Webpacker.instance = ::Webpacker::Instance.new
+Webpacker.instance = Webpacker::Instance.new \
+  root_path: Pathname.new(File.expand_path("test_app", __dir__)),
+  config_path: Pathname.new(File.expand_path("./test_app/config/webpacker.yml", __dir__))
 
 class Webpacker::Test < Minitest::Test
   private
     def reloaded_config
-      Webpacker.instance.instance_variable_set(:@env, nil)
       Webpacker.instance.instance_variable_set(:@config, nil)
-      Webpacker.instance.instance_variable_set(:@dev_server, nil)
-      Webpacker.env
       Webpacker.config
-      Webpacker.dev_server
     end
 
-    def with_rails_env(env)
-      original = Rails.env
-      Rails.env = ActiveSupport::StringInquirer.new(env)
-      reloaded_config
+    def with_node_env(env)
+      original = ENV["NODE_ENV"]
+      ENV["NODE_ENV"] = env
       yield
     ensure
-      Rails.env = ActiveSupport::StringInquirer.new(original)
-      reloaded_config
+      ENV["NODE_ENV"] = original
     end
 end

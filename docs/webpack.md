@@ -29,7 +29,7 @@ module.exports = {
 }
 
 // config/webpack/environment.js
-const { environment } = require('@rails/webpacker')
+const environment = require('./environment')
 const customConfig = require('./custom')
 
 // Set nested object prop using path notation
@@ -142,10 +142,7 @@ environment.loaders.insert('svg', {
       }
     }
   ])
-}, { after: 'file' })
-
-const fileLoader = environment.loaders.get('file')
-fileLoader.exclude = /\.(svg)$/i
+}, { before: 'file' })
 ```
 
 
@@ -154,13 +151,16 @@ fileLoader.exclude = /\.(svg)$/i
 ```js
 // config/webpack/loaders/url.js
 
+const { assetHost } = require('@rails/webpacker')
+
 module.exports = {
   test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
   use: [{
     loader: 'url-loader',
     options: {
       limit: 10000,
-      name: '[name]-[hash].[ext]'
+      name: '[name]-[hash].[ext]',
+      publicPath: assetHost.publicPathWithHost
     }
   }]
 }
@@ -168,12 +168,8 @@ module.exports = {
 // config/webpack/environment.js
 
 const { environment } = require('@rails/webpacker')
-const url = require('./loaders/url')
 
 environment.loaders.prepend('url', url)
-
-// avoid using both file and url loaders
-environment.loaders.get('file').test = /\.(tiff|ico|svg|eot|otf|ttf|woff|woff2)$/i
 ```
 
 ### Overriding Loader Options in webpack 3+ (for CSS Modules etc.)
@@ -256,48 +252,7 @@ const { environment } = require('@rails/webpacker')
 environment.resolvedModules.append('vendor', 'vendor')
 ```
 
-### Add SplitChunks (Webpack V4)
-Originally, chunks (and modules imported inside them) were connected by a parent-child relationship in the internal webpack graph. The CommonsChunkPlugin was used to avoid duplicated dependencies across them, but further optimizations were not possible
-
-Since webpack v4, the CommonsChunkPlugin was removed in favor of optimization.splitChunks.
-
-For the full configuration options of SplitChunks, see the [Webpack documentation](https://webpack.js.org/plugins/split-chunks-plugin/).
-
-```js
-// config/webpack/environment.js
-const WebpackAssetsManifest = require('webpack-assets-manifest');
-
-const splitChunks = {
-  optimization: {
-    splitChunks: {
-      chunks: 'all'
-    },
-  },
-};
-
-environment.config.merge(splitChunks);
-
-// Should override the existing manifest plugin
-environment.plugins.insert(
-  'Manifest',
-  new WebpackAssetsManifest({
-    entrypoints: true, // default in rails is false
-    writeToDisk: true, // rails defaults copied from webpacker
-    publicPath: true // rails defaults copied from webpacker
-  })
-)
-```
-
-To use the `javascript_pack_tag` or the `stylesheet_pack_tag` with `SplitChunks` or `RuntimeChunks` you can refer to the packs as usual.
-
-```erb
-javascript_pack_tag "your-entrypoint-javascript-file"
-stylesheet_pack_tag "your-entrypoint-stylesheet-file"
-```
-
-For the old configuration with the CommonsChunkPlugin see below. **Note** that this functionality is deprecated in Webpack V4.
-
-### Add common chunks (deprecated in Webpack V4)
+### Add common chunks
 
 The CommonsChunkPlugin is an opt-in feature that creates a separate file (known as a chunk), consisting of common modules shared between multiple entry points. By separating common modules from bundles, the resulting chunked file can be loaded once initially, and stored in the cache for later use. This results in page speed optimizations as the browser can quickly serve the shared code from the cache, rather than being forced to load a larger bundle whenever a new page is visited.
 
