@@ -1,4 +1,170 @@
-**Please note that Webpacker 3.1.0 and 3.1.1 has some serious bugs so please consider using either 3.0.2 or 3.2.0**
+**Please note that Webpacker 3.1.0 and 3.1.1 have some serious bugs so please consider using either 3.0.2 or 3.2.0**
+
+## [4.0.0.rc.2] - 2018-12-15
+
+### Fixed
+ - Disable integrity hash generation [#1835](https://github.com/rails/webpacker/issues/1835)
+
+
+## [4.0.0.rc.1] - 2018-12-14
+
+### Breaking changes
+
+  - Order of rules changed so you might have to change append to prepend,
+  depending on how you want to process packs [#1823](https://github.com/rails/webpacker/pull/1823)
+  ```js
+  environment.loaders.prepend()
+  ```
+  - Separate CSS extraction from build environment [#1625](https://github.com/rails/webpacker/pull/1625)
+  ```yml
+  # Extract and emit a css file
+  extract_css: true
+  ```
+  - Separate rule to compile node modules
+  (fixes cases where ES6 libraries were included in the app code) [#1823](https://github.com/rails/webpacker/pull/1823)
+  - File loader extensions API [#1823](https://github.com/rails/webpacker/pull/1823)
+  ```yml
+  # webpacker.yml
+  static_assets_extensions:
+    - .pdf
+    # etc..
+  ```
+
+### Added
+
+  - Move `.babelrc` and `.postcssrc` to `.js` variant [#1822](https://github.com/rails/webpacker/pull/1822)
+  - Use postcss safe parser when optimising css assets [#1822](https://github.com/rails/webpacker/pull/1822)
+  - Add split chunks api (undocumented)
+  ```js
+  const { environment } = require('@rails/webpacker')
+  // Enable with default config
+  environment.splitChunks()
+  // Configure via a callback
+  environment.splitChunks((config) => Object.assign({}, config, { optimization: { splitChunks: false }}))
+  ```
+  - Allow changing static file extensions using webpacker.yml (undocumented)
+
+## [4.0.0-pre.3] - 2018-10-01
+
+### Added
+
+  - Move supported browsers configuration to [.browserslistrc](https://github.com/browserslist/browserslist#queries)
+
+### Breaking changes
+
+  - postcss-next is replaced with postcss-preset-env
+  - babel@7
+
+### Fixed
+
+  - Bring back test env [#1563](https://github.com/rails/webpacker/pull/1563)
+
+Please see a list of [commits](https://github.com/rails/webpacker/compare/2dd68f0273074aadb3f869c4c30369d5e4e3fea7...master)
+
+## [4.0.0-pre.2] - 2018-04-2
+
+### Fixed
+
+- Webpack dev server version in installer
+
+
+## [4.0.0-pre.1] - 2018-04-2
+
+Pre-release to try out webpack 4.0 support
+
+### Added
+  - Webpack 4.0 support [#1376](https://github.com/rails/webpacker/pull/1316)
+
+### Fixed
+  - Remove compilation digest file if webpack command fails[#1398](https://github.com/rails/webpacker/issues/1398)
+
+
+Please refer to [3-x-stable](https://github.com/rails/webpacker/tree/3-x-stable) branch
+for further releases and changelogs:
+
+## [3.4.1] - 2018-03-24
+
+### Fixed
+  - Yarn integrity check in development [#1374](https://github.com/rails/webpacker/issues/1374)
+
+
+## [3.4.0] - 2018-03-23
+
+**Please use 3.4.1 instead**
+
+### Added
+  - Support for custom Rails environments [#1359](https://github.com/rails/webpacker/pull/1359)
+
+*This could break the compilation if you set NODE_ENV to custom environment. Now, NODE_ENV only understands production or development mode*
+
+
+## [3.3.1] - 2018-03-12
+
+### Fixed
+
+- Use webpack dev server 2.x until webpacker supports webpack 4.x [#1338](https://github.com/rails/webpacker/issues/1338)
+
+## [3.3.0] - 2018-03-03
+
+### Added
+
+- Separate task for installing/updating binstubs
+- CSS modules support [#1248](https://github.com/rails/webpacker/pull/1248)
+- Pass `relative_url_root` to webpacker config [#1236](https://github.com/rails/webpacker/pull/1236)
+
+### Breaking changes
+
+- Fixes [#1281](https://github.com/rails/webpacker/issues/1281) by installing binstubs only as local executables. To upgrade:
+
+```
+bundle exec rails webpacker:binstubs
+```
+- set function is now removed from plugins and loaders, please use `append` or `prepend`
+
+```js
+// config/webpack/environment.js
+const { environment } = require('@rails/webpacker')
+
+environment.loaders.append('json', {
+  test: /\.json$/,
+  use: 'json-loader'
+})
+```
+
+### Fixed
+- Limit ts-loader to 3.5.0 until webpack 4 support [#1308](https://github.com/rails/webpacker/pull/1308)
+- Custom env support [#1304](https://github.com/rails/webpacker/pull/1304)
+
+## [3.2.2] - 2018-02-11
+
+### Added
+
+- Stimulus example [https://stimulusjs.org/](https://stimulusjs.org/)
+
+```bash
+bundle exec rails webpacker:install:stimulus
+```
+
+- Upgrade gems and npm packages [#1254](https://github.com/rails/webpacker/pull/1254)
+
+And, bunch of bug fixes [See changes](https://github.com/rails/webpacker/compare/v3.2.1...v3.2.2)
+
+## [3.2.1] - 2018-01-21
+
+- Disable dev server running? check if no dev server config is present in that environment [#1179](https://github.com/rails/webpacker/pull/1179)
+
+- Fix checking 'webpack' binstub on Windows [#1123](https://github.com/rails/webpacker/pull/1123)
+
+- silence yarn output if checking is successful [#1131](https://github.com/rails/webpacker/pull/1131)
+
+- Update uglifyJs plugin to support ES6 [#1194](https://github.com/rails/webpacker/pull/1194)
+
+- Add typescript installer [#1145](https://github.com/rails/webpacker/pull/1145)
+
+- Update default extensions and move to installer [#1181](https://github.com/rails/webpacker/pull/1181)
+
+- Revert file loader [#1196](https://github.com/rails/webpacker/pull/1196)
+
 
 ## [3.2.0] - 2017-12-16
 
@@ -151,7 +317,7 @@ files.
 const sassLoader = environment.loaders.get('sass')
 const cssLoader = sassLoader.use.find(loader => loader.loader === 'css-loader')
 
-cssLoader.options = Object.assign(cssLoader.options, {
+cssLoader.options = Object.assign({}, cssLoader.options, {
   modules: true,
   localIdentName: '[path][name]__[local]--[hash:base64:5]'
 })
@@ -215,7 +381,7 @@ Webpacker.dev_server.connect_timeout = 1
 
 - Binstubs [#833](https://github.com/rails/webpacker/pull/833)
 
-- Allow dev server settings to be overriden by env variables [#843](https://github.com/rails/webpacker/pull/843)
+- Allow dev server settings to be overridden by env variables [#843](https://github.com/rails/webpacker/pull/843)
 
 - A new `lookup` method to manifest to perform lookup without raise and return `nil`
 
