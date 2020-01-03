@@ -105,7 +105,7 @@ module Webpacker::Helper
     if self.class.method_defined?(:preload_link_tag)
       preload_link_tag(current_webpacker_instance.manifest.lookup!(name), options)
     else
-      raise "You need Rails >= 5.2 to use this tag."
+      raise "You need Jets >= 5.2 to use this tag."
     end
   end
 
