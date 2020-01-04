@@ -3,8 +3,8 @@ require "rails/railtie"
 require "webpacker/helper"
 require "webpacker/dev_server_proxy"
 
-class Webpacker::Engine < ::Jets::Engine
-  # Allows Webpacker config values to be set via Jets env config files
+class Webpacker::Engine < ::Rails::Engine
+  # Allows Webpacker config values to be set via Rails env config files
   config.webpacker = ActiveSupport::OrderedOptions.new
 
   initializer "webpacker.set_configs" do |app|
@@ -54,7 +54,7 @@ class Webpacker::Engine < ::Jets::Engine
     insert_middleware = Webpacker.config.dev_server.present? rescue nil
     if insert_middleware
       app.middleware.insert_before 0,
-        Jets::VERSION::MAJOR >= 5 ?
+        Rails::VERSION::MAJOR >= 5 ?
           Webpacker::DevServerProxy : "Webpacker::DevServerProxy", ssl_verify_none: true
     end
   end
@@ -71,16 +71,16 @@ class Webpacker::Engine < ::Jets::Engine
 
   initializer "webpacker.logger" do
     config.after_initialize do
-      if ::Jets.logger.respond_to?(:tagged)
-        Webpacker.logger = ::Jets.logger
+      if ::Rails.logger.respond_to?(:tagged)
+        Webpacker.logger = ::Rails.logger
       else
-        Webpacker.logger = ActiveSupport::TaggedLogging.new(::Jets.logger)
+        Webpacker.logger = ActiveSupport::TaggedLogging.new(::Rails.logger)
       end
     end
   end
 
   initializer "webpacker.bootstrap" do
-    if defined?(Jets::Server) || defined?(Jets::Console)
+    if defined?(Rails::Server) || defined?(Rails::Console)
       Webpacker.bootstrap
       if defined?(Spring)
         require "spring/watcher"
@@ -92,7 +92,7 @@ class Webpacker::Engine < ::Jets::Engine
 
   initializer "webpacker.set_source" do |app|
     if Webpacker.config.config_path.exist?
-      app.config.javascript_path = Webpacker.config.source_path.relative_path_from(Jets.root.join("app")).to_s
+      app.config.javascript_path = Webpacker.config.source_path.relative_path_from(Rails.root.join("app")).to_s
     end
   end
 end
